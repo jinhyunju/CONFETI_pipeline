@@ -65,9 +65,12 @@ N_pheno = pval_mx.shape[0]
 
 N_total_pval = N_pheno * N_geno
 
-geno_chunk_size = pval_mx.chunks[1]
-
-pheno_chunk_size = pval_mx.chunks[0]
+if pval_mx.chunks is None:
+    geno_chunk_size = 100
+    pheno_chunk_size = 100
+else :
+    geno_chunk_size = pval_mx.chunks[1]
+    pheno_chunk_size = pval_mx.chunks[0]
 
 
 if direction == "geno":
@@ -133,7 +136,10 @@ while k > 0 :
     k -= 1
 
 
-print "BH p-values stopped at rank %d with adj pval %f" % (len(pval_list), max(adjpval_list))
+if len(adjpval_list) > 0:
+    print "BH p-values stopped at rank %d with adj pval %f" % (len(pval_list), max(adjpval_list))
+else :
+    print "No BH p-values were below threshold"
 h5py.File.close(open_h5)
 
 # save output into hdf5 format

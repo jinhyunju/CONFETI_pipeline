@@ -29,8 +29,8 @@ figure_path <- as.character(commandArgs(TRUE))[2]
 if(length(commandArgs(TRUE)) < 1){
 
 #  dataset_name <- "GTExAdiposeSubq"
-  input_path <- "/zenodotus/dat01/mezeylab_scratch/jij2009/confeti_R_GPCA/Smith2008/pval_medians/"
-  figure_path <- "/zenodotus/dat01/mezeylab_scratch/jij2009/confeti_R_GPCA/figures/Indv_datasets/pval_medians/"
+  input_path <- "/zenodotus/dat01/mezeylab_scratch/jij2009/confeti_paper_results/pval_medians/GTEx/GPCA_corrected/"
+  figure_path <- "/zenodotus/dat01/mezeylab_scratch/jij2009/confeti_paper_results/plots_all_methods_160912/lambda_plots/GPCA_lambda_plots/"
 
 }
 message("Generating genomic inflation factor plots\n")
@@ -40,8 +40,6 @@ message("Figures generated in = ", figure_path, "\n")
 
 setwd(input_path)
 
-
-method_factors = c("CONFETI", "CONPANA", "PANAMA", "PCALMM", "ICE", "LINEAR")
 #method_factors <- c("PARTHYBRIDpy", "PARTICApy", "PANAMApy", "ICEpy", "PEER", "LINEAR")
 all_pval_median_files <- grep("pvals_median.h5", dir(), value = TRUE)
 
@@ -57,16 +55,14 @@ for(dataset_name in unique.datasets){
 
 
     for(i in 1:length(unique.methods)){
-      revised_method <- gsub("Rgpca","",gsub("py", "", gsub("[0-9]","", unique.methods[i])))
-      revised_method <- gsub("gpca", "", revised_method)
-      if(revised_method %in% method_factors){
-          message("Processing for method = ", unique.methods[i])
-      
-          method.files <- grep(paste(unique.methods[i],"_",sep=""), pval_median_files, value = TRUE)
+        revised_method <- gsub("py", "", gsub("[0-9]","", unique.methods[i]))
 
-          pval_median_list[[revised_method]] <- h5read(method.files, "median_pvals")
+        message("Processing for method = ", unique.methods[i])
 
-      }
+        method.files <- grep(paste(unique.methods[i],"_",sep=""), pval_median_files, value = TRUE)
+
+        pval_median_list[[revised_method]] <- h5read(method.files, "median_pvals")
+
     }
 
 
@@ -80,9 +76,6 @@ for(dataset_name in unique.datasets){
 
     colnames(lambda_df) <- c("method", "lambda")
 
-    if(!is.null(method_factors)){
-      lambda_df$method <- factor(lambda_df$method, levels = method_factors )  
-    }
 
     lambda_df$lambda_diff <- with(lambda_df, as.numeric(lambda) - 1)
 

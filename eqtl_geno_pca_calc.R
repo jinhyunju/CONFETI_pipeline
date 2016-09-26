@@ -1,6 +1,6 @@
 options(warn=-1)
 suppressMessages(library(eQTLtools))
-suppressMessages(library(icreport))
+suppressMessages(library(icreport, lib.loc = "/home/jij2009/R_packages/"))
 suppressMessages(require(lrgpr))
 suppressMessages(require(rhdf5))
 options(warn=0)
@@ -25,6 +25,9 @@ geno_pca <- prcomp(geno)
 var_pct <- (geno_pca$sdev^2) / sum(geno_pca$sdev^2)
 n_pc <- which(cumsum(var_pct) > 0.25)[1] 
 
+if(n_pc < 10){
+    n_pc <- min(10, dim(geno))
+}
 geno_x <- geno_pca$x[,1:n_pc]
 geno_weight <- diag(geno_pca$sdev[1:n_pc])
 

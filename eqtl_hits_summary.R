@@ -1,5 +1,4 @@
 suppressPackageStartupMessages(library(ggplot2))
-
 suppressPackageStartupMessages(library(icreport))
 suppressPackageStartupMessages(library(grid))
 suppressPackageStartupMessages(library(RColorBrewer))
@@ -636,9 +635,9 @@ count_pseudo_hits <- function(input_list){
         } else if (dim(count_table_list[[i]])[2] == 1 ){
             
             if(colnames(count_table_list[[i]]) == "FALSE"){
-                temp_df <- data.frame("hits" = 1, "pseudo_hits" = 1, "gene" = rownames(count_table_list[[i]]))
-            } else {
                 temp_df <- data.frame("hits" = 1, "pseudo_hits" = 0, "gene" = rownames(count_table_list[[i]]))
+            } else {
+                temp_df <- data.frame("hits" = 0, "pseudo_hits" = 1, "gene" = rownames(count_table_list[[i]]))
             }
             temp_list[[i]] <- temp_df
 
@@ -746,14 +745,14 @@ dataset.name <- as.character(commandArgs(TRUE)[1])
 
 if(is.na(dataset.name)){
 
-    dataset.name <- "GTExHeart"
+    dataset.name <- "NHSAE"
 
 }
-replication_plots <- FALSE
+replication_plots <- TRUE
 pseudo_trans_plot = TRUE
 pca_geno_correlations <- FALSE
-
-merged.file.path <- "/zenodotus/dat01/mezeylab_scratch/jij2009/confeti_paper_results/eqtl_hits/GTExHeart_hits/"
+master_path <- "/zenodotus/dat01/mezeylab_scratch/jij2009/confeti_paper_results/"
+merged.file.path <- paste0(master_path,"eqtl_hits/NHSAE_hits/LMM_hits/")
 eqtl_data_path <- "/zenodotus/dat01/mezeylab_scratch/jij2009/eqtl_input_h5/"
 #merged.file.path <- "/zenodotus/dat01/mezeylab_scratch/jij2009/eqtl_multi_method/eqtl_merged_results/GTExSkin_eqtl_hits/"
 #eqtl_data_file <- "/zenodotus/dat01/mezeylab_scratch/jij2009/eqtl_h5_with_Kmx/GTExEsophagusJunction.h5"
@@ -761,8 +760,8 @@ eqtl_data_path <- "/zenodotus/dat01/mezeylab_scratch/jij2009/eqtl_input_h5/"
 eqtl_data <- grep(dataset.name, dir(eqtl_data_path), value = TRUE)
 eqtl_data_file <- paste0(eqtl_data_path,eqtl_data[1])
 #figure_path <- "/zenodotus/dat01/mezeylab_scratch/jij2009/confeti_paper_results/Figures/"
-figure_path <- "/zenodotus/dat01/mezeylab_scratch/jij2009/confeti_paper_results/test_plots/"
-method_factors <- c("CONFETI", "CONPANA", "PANAMA", "ICE", "LINEAR")
+figure_path <- paste0(master_path,"plots_all_methods_160912/")
+method_factors <- c("CONFETI", "CONPANA", "PANAMA", "PCAKMX", "ICE", "LINEAR")
 #method_factors <- c("PARTICApy","CONPANApy", "PANAMApy","CONFETIpy", "ICEpy", "PCALMM2")
 #method_factors <- c("CONPANApy","CONFETIpy","PARTICApy", "PANAMApy", "PCALMM2py","ICEpy", "PEER", "LINEAR")
 #method_factors <- c("CONPANArawmx","PARTICArawmx", "PANAMArawmx", "ICErawmx","PCALMM2rawmx")
@@ -771,15 +770,12 @@ method_factors <- c("CONFETI", "CONPANA", "PANAMA", "ICE", "LINEAR")
 #method_factors <- c("CONFETIgpca","CONPANAgpca","PARTICAgpca", "PANAMAgpca", "ICEgpca","PCALMM2gpca")
 bh_cutoff <- 0.025
 
-#methods.to.plot <- c("FULLICAr", "ICALMMr", "PANAMAr", "ICEr","PCALMMr","LINEARr")
-
 today_date <- gsub("-", "_", Sys.Date())
 prefix <- paste("_", today_date, sep = "")
 
 setwd(merged.file.path)
 
-dataset.files <- grep(dataset.name, dir(), value = TRUE)
-dataset.files <- grep("[.]h5", dataset.files, value = TRUE)
+dataset.files <- list.files(merged.file.path, pattern = "h5")
 
 eqtl.merged.list <- list()
 
@@ -808,6 +804,7 @@ for(single_dataset in unique.datasets){
 
 for(i in 1:length(unique.methods)){
     revised_method <- gsub("py", "", gsub("[0-9]", "", unique.methods[i]))
+    revised_method <- gsub("gpca", "", revised_method)
     if(revised_method %in% method_factors){
 
         message("Processing for method = ", unique.methods[i])
@@ -838,12 +835,12 @@ if(replication_plots){
                         figure.path = paste0(figure_path,"replication_fdr_plots/"), 
                         data_prefix = dataset.name, factor_sort = method_factors)
 
-    eqtl_rep_bonferroni_plots(eqtl.merged.list, 
-                          total_tests = total_tests,
-                          max.bon = 0.2,
-                          figure.path = paste0(figure_path,"replication_fdr_plots/"), 
-                          data_prefix = dataset.name, 
-                          factor_sort = method_factors)
+#    eqtl_rep_bonferroni_plots(eqtl.merged.list, 
+#                          total_tests = total_tests,
+#                          max.bon = 0.2,
+#                          figure.path = paste0(figure_path,"replication_fdr_plots/"), 
+#                          data_prefix = dataset.name, 
+#                          factor_sort = method_factors)
 
 }
 

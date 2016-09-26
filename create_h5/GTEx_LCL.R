@@ -1,33 +1,51 @@
-library(eQTLtools)
+library(icreport)
+library(rhdf5)
 
-RData_file <- "GTExlcl.RData"
-#RData_file <- "GTExAdiposeSubq.RData"
+file_path <- "/zenodotus/dat01/mezeylab_scratch/jij2009/updated_input_files"
+output_path <- "/zenodotus/dat01/mezeylab_scratch/jij2009/eqtl_input_h5/"
+
+setwd(file_path)
+
+
+RData_file <- "GTExLCL.RData"
 load(RData_file)
-file_name <- gsub("RData", "h5", RData_file)
+file_name_h5 <- gsub("RData", "h5", RData_file)
+file_name <- paste0(output_path, file_name_h5)
 colnames(genotypes) <- as.character(snp.info$id)
-message("Creating h5 File ", file_name)
-create_eqtl_input_h5(file_name)
+rownames(phenotypes) <- gsub("[.]", "", rownames(phenotypes))
+rownames(genotypes) <- gsub("[.]", "", rownames(genotypes))
+# first sort the genes by the chromosome
 
-message("Adding Genotype and phenotype information")
-add_geno_pheno_covar_h5(file_name = file_name,
-						phenotypes = phenotypes,
-						genotypes = genotypes,
-						covars = covars)
-						
-message("Adding SNP information")
-add_snp_info_h5(file_name = file_name,
-				snp_info = snp.info,
-				id_col = "id",
-				chr_col = "chrom",
-				pos_col = "position")
-				
-				
-message("Adding Gene information")
-add_gene_info_h5(file_name = file_name, 
-				 gene_info = gene.info,
-				 id_col = "ensembl",
-				 chr_col = "chromosome",
-				 start_col = "start",
-				 end_col = "end",
-				 entrez_col = "entrez",
-				 symbol_col = "symbol")
+#	gene.info = gene.info[order(gene.info$chrom.num, gene.info$start, decreasing = FALSE),]
+
+#	phenotypes = phenotypes[,as.character(gene.info$probe)]
+
+create_h5_file(file_name)
+
+h5_add_data(file_name = file_name,
+			input_matrix = phenotypes,
+			data_type = "phenotypes")
+
+h5_add_data(file_name = file_name,
+			input_matrix = genotypes,
+			data_type = "genotypes")
+
+h5_add_data(file_name = file_name,
+			input_matrix = covars,
+			data_type = "covars")
+
+
+h5_add_snp_info(file_name = file_name,
+				snp_id = snp.info$id,
+				snp_chr = as.character(snp.info$chrom),
+				snp_pos = snp.info$position)
+
+h5_add_pheno_info(file_name = file_name,
+					pheno_id = gene.info$ensembl,
+					pheno_chr = as.character(gene.info$chromosome),
+					pheno_start = gene.info$start,
+					pheno_end = gene.info$end,
+					pheno_entrez = gene.info$entrez,
+					pheno_symbol = gene.info$symbol)
+
+H5close()

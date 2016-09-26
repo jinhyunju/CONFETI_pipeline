@@ -40,10 +40,10 @@ def get_options(argv):
 
 # function for running the linear mixed model with multiprocessing
 def worker(i):
-    global pheno, input_geno, K_mx, geno_pca
-    #print "Processing phenotype with geno PCA # %d" % (i +1)
+    global pheno, input_geno, K_mx
+    #print "Processing phenotype # %d" % (i +1)
     single_pheno = pheno[:,i]
-    lmm_result = qtl.test_lmm(snps = input_geno, pheno = single_pheno, K = K_mx, covs = geno_pca, test = 'f', verbose = False)
+    lmm_result = qtl.test_lmm(snps = input_geno, pheno = single_pheno, K = K_mx, covs = None, test = 'lrt', verbose = False)
     single_pvals = np.array(lmm_result.getPv())
     return single_pvals
 
@@ -62,16 +62,17 @@ if __name__ == '__main__':
     
     file_name, method, cores, N_batch = get_options(sys.argv[1:])
     # Input file location
+    
+    prefix = re.sub('\.h5', '',file_name)
+
     if "LINEAR" in method:
         method = "LINEAR"
     elif "ICE" in method:
         method = "ICE"
     
-    prefix = re.sub('\.h5', '',file_name)
-
     # The script will be run in $TMPDIR so file should be created in current directory
     pval_path = './'
-    pval_file = prefix + "_" + method + "gpca_pvals.h5"
+    pval_file = prefix + "_TRUTHpy_pvals.h5"
 
     # open hdf5 file for processing 
     h5_file = h5py.File(file_name,'r+')
@@ -80,13 +81,9 @@ if __name__ == '__main__':
     ################## read in genotype and phenotype data #######################
     ##############################################################################
     # read in genotype and phenotype data
-    pheno_read = np.array(h5_file['phenotypes/matrix'])
+    pheno_read = np.array(h5_file['phenotypes/noise'])
     geno_read = np.array(h5_file['genotypes/matrix'])
-    print "Reading in Genotype PCAs \n"
 
-    geno_pc_matrix = h5_file['GPCA/matrix']
-    geno_pca = np.transpose(geno_pc_matrix)
-    geno_pca = geno_pca[:,range(2)]
     print "Centering Phenotypes \n"
     pheno_mean = np.mean(pheno_read, 1)
     pheno_centered = pheno_read - pheno_mean[:, np.newaxis]
@@ -109,6 +106,12 @@ if __name__ == '__main__':
 
     h5py.File.close(h5_file)
 
+    Kmx_file = prefix + "_" + method + "_Kmx.h5"
+    Kmxh5 = h5py.File(Kmx_file, 'w')
+    Kmx_save = Kmxh5.create_dataset("Kmx", (N_sample,N_sample), dtype = 'float32', chunks = True)
+    Kmx_save[:,:] = K_mx
+    h5py.File.close(Kmxh5)
+    
     ##############################################################################
     ######################### Generate Batch Indexes #############################
     ##############################################################################

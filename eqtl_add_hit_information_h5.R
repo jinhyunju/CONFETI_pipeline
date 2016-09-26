@@ -36,14 +36,12 @@ if(is.null(gene.info$pheno_symbol)){
 }
 
 
-
 snp.info <- as.data.frame(h5read(input_file, "genotypes/col_info"))
 colnames(snp.info)[grep("id", colnames(snp.info))] <- "geno_id"
 
+file_data_info <- gsub("_hits[.]txt","", pval.file)
 
-file_data_info <- unlist(strsplit(pval.file,"_"))
-
-merged_h5_file <- paste(file_data_info[1],"_" ,file_data_info[2],"_eqtldf.h5", sep = "")
+merged_h5_file <- paste(file_data_info,"_eqtldf.h5", sep = "")
 
 merged_h5_file <- paste(output_dir, merged_h5_file, sep = "")
 #check if merged file already exists
@@ -63,6 +61,8 @@ H5close()
 eqtl_hits <- na.omit(eqtl_hits)
 
 clean.eqtl <- eQTLtools::cleaning_results(eqtl_hits, snp.info, gene.info, cis_distance)
+
+
 #clean.eqtl$geno_chr <- as.character(clean.eqtl$geno_chr)
 clean.eqtl$eqtl_id <- paste(clean.eqtl$pheno_symbol, clean.eqtl$cis_trans, as.character(clean.eqtl$geno_chr), sep ="_")
 
@@ -79,7 +79,7 @@ chunk_size <- min(nrow_df, 100)
 for(info_col in names(clean.eqtl)){
 #   info_col <- "hit_id"
     # save in chunks to avoid failing to save large datasets
-    if(info_col %in% c("geno_pos", "pheno_start", "pheno_end", "pval","p.bh")){
+    if(info_col %in% c("geno_pos", "pheno_start", "pheno_end", "pval","p.bh", "genotype.idx","phenotype.idx")){
             h5createDataset(file = merged_h5_file, dataset = paste0("eqtl_info/", info_col),
                     dims = c(length(clean.eqtl[,info_col]),1), chunk = c(chunk_size,1), level = 1,
                     storage.mode = "double")
@@ -95,6 +95,7 @@ for(info_col in names(clean.eqtl)){
 
 }
 
+h5write(input_file, merged_h5_file, "input_file")
 #h5createFile(merged_h5_file)
 
 #h5write(clean.eqtl, merged_h5_file, "/eqtl_df")

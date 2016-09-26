@@ -1,6 +1,6 @@
 options(warn=-1)
 suppressMessages(library(eQTLtools))
-suppressMessages(library(icreport))
+suppressMessages(library(icreport, lib.loc = "/home/jij2009/R_packages/"))
 suppressMessages(require(lrgpr))
 suppressMessages(require(rhdf5))
 options(warn=0)
@@ -123,6 +123,28 @@ if(method == "PCALMM"){
     h5write(Kmx_PCA, input_file, paste0("K_mx/",group_to_save))
 }
 
+if(method == "PCAKMX"){
+
+    message("Correction method = PCALMM\n")
+    message("Running PCA\n")
+	group_to_save <- paste0(method, var_data)
+
+    pca.pheno <- gene_expr_pca(phenotype.mx = t(pheno))
+   
+    pca.pheno$hf <- pca_genotype_test(pca.pheno, geno, n.cores = 1)$hf
+
+    hf_idx <- match(pca.pheno$hf, colnames(pca.pheno$x))
+
+    n.covars <- length(hf_idx)
+
+    message(n.covars, " out of ",length(pca.pheno$var.percent)," PCs used as confounding factors \n")
+
+    weighted.pc.proj <- pca.pheno$x[,hf_idx] %*% diag(pca.pheno$var.percent[hf_idx])
+
+    Kmx_PCA <- cov(t(weighted.pc.proj))
+	Kmx_PCA <- Kmx_PCA / sum(diag(Kmx_PCA))
+    h5write(Kmx_PCA, input_file, paste0("K_mx/",group_to_save))
+}
 
 
 if(method == "ICE"){

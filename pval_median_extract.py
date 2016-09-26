@@ -57,9 +57,13 @@ N_pheno = pval_mx.shape[0]
 
 N_total_pval = N_pheno * N_geno
 
-geno_chunk_size = pval_mx.chunks[1]
 
-pheno_chunk_size = pval_mx.chunks[0]
+if pval_mx.chunks is None:
+    geno_chunk_size = 100
+    pheno_chunk_size = 100
+else :
+    geno_chunk_size = pval_mx.chunks[1]
+    pheno_chunk_size = pval_mx.chunks[0]
 
 
 median_h5_file = prefix + "_median.h5"

@@ -104,18 +104,20 @@ cp -v $HOME/jin/xqtl/* .
 # run regression or mixed model analysis
 
 # check whether Kmx is saved or not
-printf "Estimating Missing Similarity Matrices"
+printf "Estimating Missing Similarity Matrices - Rscript"
 $RPATH/Rscript-3.2.0 eqtl_Kmx_variance_h5.R $INPUTFILE $METHOD $VAR
 # skipping generation  $PYTHONPATH/python PANAMA_mx_calculation.py -i $INPUTFILE
 
-printf "Running xqtl python script to calculate p-values"
+printf "Estimating Missing Similarity Matrices - Python script "
 $PYTHONPATH/python PANAMA_mx_var.py -i $INPUTFILE -m $METHOD -v $VAR
 
 STARTTIME=$(date)
 echo "$STARTTIME - Analysis start time"
-
+printf "Running xqtl python script to calculate p-values"
 $PYTHONPATH/python xqtl_python.py -i $INPUTFILE -m $METHODVAR -c $OMP_NUM_THREADS -b $N_BATCH
 
+
+printf "xqtl analysis finished"
 BHCALCTIME=$(date)
 echo "$BHCALCTIME - Hit list script start time"
 
